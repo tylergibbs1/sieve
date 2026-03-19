@@ -1,0 +1,23 @@
+{
+  "name": "sieve",
+  "version": "0.1.0",
+  "description": "A virtual browser for AI agents. No rendering. No Chromium. Just the parts that matter.",
+  "module": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "htmlparser2": "^11.0.0"
+  }
+}

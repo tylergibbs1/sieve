@@ -1,0 +1,237 @@
+[
+  {
+    "url": "https://example.com",
+    "category": "simple-static",
+    "description": "IANA example domain. Minimal, standards-compliant HTML with almost no styling. Good baseline test."
+  },
+  {
+    "url": "https://info.cern.ch/hypertext/WWW/TheProject.html",
+    "category": "simple-static",
+    "description": "The first ever website. Pure semantic HTML, no CSS, no JS. Tests raw HTML parsing."
+  },
+  {
+    "url": "https://motherfuckingwebsite.com",
+    "category": "simple-static",
+    "description": "Intentionally minimal HTML page. Tests basic document structure with almost zero complexity."
+  },
+  {
+    "url": "https://lite.cnn.com",
+    "category": "simple-static",
+    "description": "CNN's text-only lite site. Simple semantic HTML, minimal styling, lots of links."
+  },
+  {
+    "url": "https://blog.mozilla.org",
+    "category": "simple-static",
+    "description": "Mozilla's blog. Clean WordPress-based markup with articles, headers, and navigation."
+  },
+  {
+    "url": "https://craigslist.org",
+    "category": "simple-static",
+    "description": "Famously minimal HTML. Dense link structure, basic tables, old-school markup."
+  },
+  {
+    "url": "https://news.ycombinator.com",
+    "category": "simple-static",
+    "description": "Hacker News. Table-based layout, minimal CSS, nested comment structure, pagination."
+  },
+  {
+    "url": "https://www.wikipedia.org",
+    "category": "simple-static",
+    "description": "Wikipedia portal page. Multilingual links, search form, clean semantic structure."
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/HTML",
+    "category": "complex-structured",
+    "description": "Wikipedia article page. Complex tables, nested headings, infoboxes, footnotes, TOC navigation."
+  },
+  {
+    "url": "https://books.toscrape.com",
+    "category": "complex-structured",
+    "description": "Scraping sandbox. Fake e-commerce with product cards, pagination, categories, ratings, prices."
+  },
+  {
+    "url": "https://quotes.toscrape.com",
+    "category": "form-heavy",
+    "description": "Scraping sandbox with login form, pagination, tags, and quote/author data extraction."
+  },
+  {
+    "url": "https://www.scrapethissite.com/pages/",
+    "category": "complex-structured",
+    "description": "Scraping practice site with tables of country data, sports stats, and paginated lists."
+  },
+  {
+    "url": "https://webscraper.io/test-sites/e-commerce/allinone",
+    "category": "complex-structured",
+    "description": "Web Scraper test e-commerce site. Product cards, categories, pagination, varied layouts."
+  },
+  {
+    "url": "https://httpbin.org",
+    "category": "developer-tools",
+    "description": "HTTP request/response testing service. Forms for various HTTP methods, structured API docs."
+  },
+  {
+    "url": "https://httpbin.org/forms/post",
+    "category": "form-heavy",
+    "description": "HTTPBin form page. HTML form with various input types that POSTs data. Good form parsing test."
+  },
+  {
+    "url": "https://www.gov.uk",
+    "category": "government",
+    "description": "UK Government portal. Gold standard for semantic HTML, ARIA landmarks, accessible navigation."
+  },
+  {
+    "url": "https://www.gov.uk/search/all?keywords=test",
+    "category": "government",
+    "description": "GOV.UK search results page. Form with filters, faceted navigation, result list, pagination."
+  },
+  {
+    "url": "https://www.usa.gov",
+    "category": "government",
+    "description": "US Government portal. Clean semantic HTML, USWDS design system, good heading hierarchy."
+  },
+  {
+    "url": "https://www.census.gov/data/tables.html",
+    "category": "government",
+    "description": "Census data tables index. Links to complex data tables, nested navigation, government structure."
+  },
+  {
+    "url": "https://www.w3.org",
+    "category": "developer-tools",
+    "description": "W3C homepage. Standards-compliant HTML, proper semantic structure, accessible navigation."
+  },
+  {
+    "url": "https://www.w3.org/WAI/ARIA/apg/",
+    "category": "developer-tools",
+    "description": "WAI-ARIA Authoring Practices Guide. Complex ARIA patterns, landmark roles, accessible widgets."
+  },
+  {
+    "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element",
+    "category": "developer-tools",
+    "description": "MDN HTML element reference. Deep heading hierarchy, code blocks, navigation sidebar, breadcrumbs."
+  },
+  {
+    "url": "https://docs.python.org/3/library/index.html",
+    "category": "developer-tools",
+    "description": "Python standard library docs. Sphinx-generated, deep nested TOC, cross-references, search form."
+  },
+  {
+    "url": "https://www.amazon.com/s?k=books",
+    "category": "complex-structured",
+    "description": "Amazon search results. Dense product grid, filters, prices, ratings, pagination, messy HTML."
+  },
+  {
+    "url": "https://www.ebay.com/sch/i.html?_nkw=laptop",
+    "category": "complex-structured",
+    "description": "eBay search results. Product listings, filtering sidebar, sorting, pagination, varied card layouts."
+  },
+  {
+    "url": "https://www.etsy.com/search?q=pottery",
+    "category": "complex-structured",
+    "description": "Etsy search results. Product grid with images, prices, reviews, seller info, filter sidebar."
+  },
+  {
+    "url": "https://www.target.com/c/grocery/-/N-5xt1a",
+    "category": "complex-structured",
+    "description": "Target grocery category page. Product cards, faceted filters, sorting, delivery options."
+  },
+  {
+    "url": "https://www.bbc.com/news",
+    "category": "complex-structured",
+    "description": "BBC News. Semantic article markup, nested sections, images, timestamps, navigation regions."
+  },
+  {
+    "url": "https://www.npr.org",
+    "category": "complex-structured",
+    "description": "NPR homepage. Good semantic HTML, article cards, audio player links, topic navigation."
+  },
+  {
+    "url": "https://www.reuters.com",
+    "category": "complex-structured",
+    "description": "Reuters homepage. News article grid, category navigation, timestamps, structured data markup."
+  },
+  {
+    "url": "https://github.com/explore",
+    "category": "developer-tools",
+    "description": "GitHub Explore page. Repository cards, topic tags, trending lists, navigation, good a11y."
+  },
+  {
+    "url": "https://github.com/search?q=html+parser&type=repositories",
+    "category": "developer-tools",
+    "description": "GitHub search results. Filters, sorting, repository cards with stats, pagination."
+  },
+  {
+    "url": "https://stackoverflow.com/questions",
+    "category": "developer-tools",
+    "description": "Stack Overflow questions list. Tabs, filters, question summaries, tags, vote counts, pagination."
+  },
+  {
+    "url": "https://www.nytimes.com",
+    "category": "complex-structured",
+    "description": "NYT homepage. Complex grid layout, article hierarchy, section breaks, multimedia embeds."
+  },
+  {
+    "url": "https://www.imdb.com/chart/top/",
+    "category": "complex-structured",
+    "description": "IMDB Top 250 movies. Large table/list, ratings, links, structured data, sorting."
+  },
+  {
+    "url": "https://www.accessibilitychecker.org",
+    "category": "developer-tools",
+    "description": "Accessibility checker tool. Clean accessible markup, form inputs, good ARIA usage."
+  },
+  {
+    "url": "https://www.scope.org.uk",
+    "category": "government",
+    "description": "Scope disability charity. WCAG AAA target, excellent semantic HTML, accessible forms and navigation."
+  },
+  {
+    "url": "https://web.dev/learn/html",
+    "category": "developer-tools",
+    "description": "Google's HTML learning resource. Clean structured content, code examples, navigation, breadcrumbs."
+  },
+  {
+    "url": "https://www.patagonia.com/shop/new-arrivals",
+    "category": "complex-structured",
+    "description": "Patagonia product listings. Accessible e-commerce, filter/sort, product grid, good ARIA labels."
+  },
+  {
+    "url": "https://www.ssa.gov",
+    "category": "government",
+    "description": "Social Security Administration. Government site with forms, tables, USWDS components, good a11y."
+  },
+  {
+    "url": "https://www.irs.gov/forms-instructions",
+    "category": "government",
+    "description": "IRS forms page. Search form, filterable table of forms, document links, structured navigation."
+  },
+  {
+    "url": "https://validator.w3.org",
+    "category": "form-heavy",
+    "description": "W3C HTML Validator. File upload form, URL input, textarea for HTML, radio buttons, options."
+  },
+  {
+    "url": "https://www.google.com/advanced_search",
+    "category": "form-heavy",
+    "description": "Google Advanced Search. Complex form with multiple text inputs, dropdowns, and fieldsets."
+  },
+  {
+    "url": "https://duckduckgo.com",
+    "category": "form-heavy",
+    "description": "DuckDuckGo search. Clean search form, minimal HTML, privacy-focused, accessible."
+  },
+  {
+    "url": "https://www.booking.com",
+    "category": "form-heavy",
+    "description": "Booking.com. Complex search form with date pickers, dropdowns, autocomplete, filters."
+  },
+  {
+    "url": "https://web-scraping.dev/products",
+    "category": "complex-structured",
+    "description": "Web-scraping.dev product page. E-commerce test site with reviews, variants, and structured data."
+  },
+  {
+    "url": "https://datatables.net/examples/basic_init/zero_configuration.html",
+    "category": "complex-structured",
+    "description": "DataTables example. Interactive HTML table with sorting, pagination, search, complex thead/tbody."
+  }
+]

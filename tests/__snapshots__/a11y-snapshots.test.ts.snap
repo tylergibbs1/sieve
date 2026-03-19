@@ -1,0 +1,100 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`Accessibility tree snapshots typical page structure 1`] = `
+"[page] Example
+  [navigation] Main
+    [link] Home
+      Home
+    [link] About
+      About
+  [main]
+    [heading:1] Welcome
+      Welcome
+    Hello world
+  [contentinfo]
+    [link] Privacy
+      Privacy"
+`;
+
+exports[`Accessibility tree snapshots form with all input types 1`] = `
+"[page]
+  [form] Registration
+    Name
+    [textbox] Name (required, placeholder: "Your name")
+    Email
+    [textbox] Email (required)
+    [checkbox] I agree (unchecked)
+    I agree
+    [combobox] Role (value: "admin")
+      [option]
+        User
+      [option] (selected)
+        Admin
+    [button] Register
+      Register"
+`;
+
+exports[`Accessibility tree snapshots complex nested structure 1`] = `
+"[page]
+  [banner]
+    [heading:1] Site Title
+      Site Title
+    [navigation] Primary
+      [list]
+        [listitem]
+          [link] Home
+            Home
+        [listitem]
+          [link] Docs
+            Docs
+        [listitem]
+          [link] Blog
+            Blog
+  [main]
+    [article]
+      [heading:2] Article Title
+        Article Title
+      First paragraph
+      [group] (collapsed)
+        [button]
+          Show more
+        Hidden content
+    [complementary]
+      [heading:3] Related
+        Related
+      [list]
+        [listitem]
+          [link] Related 1
+            Related 1
+        [listitem]
+          [link] Related 2
+            Related 2"
+`;
+
+exports[`Accessibility tree snapshots table structure 1`] = `
+"[page]
+  [table] Users
+    [rowgroup]
+      [row]
+        [columnheader]
+          Name
+        [columnheader]
+          Email
+        [columnheader]
+          Role
+    [rowgroup]
+      [row]
+        [cell]
+          Alice
+        [cell]
+          alice@example.com
+        [cell]
+          Admin
+      [row]
+        [cell]
+          Bob
+        [cell]
+          bob@example.com
+        [cell]
+          User"
+`;

@@ -1,6 +1,10 @@
-# sieve
+<p align="center">
+  <img src="assets/logo.svg" width="180" alt="sieve logo" />
+</p>
 
-**A virtual browser for AI agents. No rendering. No Chromium. Just the parts that matter.**
+<h1 align="center">sieve</h1>
+
+<p align="center"><strong>A virtual browser for AI agents. No rendering. No Chromium. Just the parts that matter.</strong></p>
 
 TypeScript. Bun. In-memory. Instant.
 

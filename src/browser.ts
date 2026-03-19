@@ -24,15 +24,27 @@ export interface BrowserOptions {
   allowedDomains?: string[];
   /** SQLite persistence for cookies, storage, and snapshots. */
   persistence?: PersistenceOptions | true;
+  /** Automatically solve WAF challenges (Sucuri, Cloudflare simple, meta-refresh). */
+  solveWafChallenges?: boolean;
+  /** Custom challenge solvers (appended to built-in solvers). */
+  challengeSolvers?: import("./network/challenges.ts").ChallengeSolver[];
+  /** Maximum number of challenge retries before giving up. */
+  maxChallengeRetries?: number;
 }
 
 export class SieveBrowser {
   private fetcher: Fetcher | null;
   private pages: SievePage[] = [];
   private _persistence: SievePersistence | null = null;
+  private _pageOptions: import("./page.ts").PageOptions;
 
   constructor(options: BrowserOptions = {}) {
     this.fetcher = this.buildFetcher(options);
+    this._pageOptions = {
+      solveWafChallenges: options.solveWafChallenges,
+      challengeSolvers: options.challengeSolvers,
+      maxChallengeRetries: options.maxChallengeRetries,
+    };
 
     if (options.persistence) {
       const persistOpts = options.persistence === true ? {} : options.persistence;
@@ -85,7 +97,7 @@ export class SieveBrowser {
 
   /** Create a new page. */
   async newPage(): Promise<SievePage> {
-    const page = new SievePage(this.fetcher);
+    const page = new SievePage(this.fetcher, this._pageOptions);
     this.pages.push(page);
     return page;
   }

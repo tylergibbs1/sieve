@@ -78,6 +78,12 @@ export type { Fetcher, FetchResponse, FetchOptions } from "./network/fetcher.ts"
 export { LiveFetcher } from "./network/live.ts";
 export { MockFetcher, ReplayFetcher } from "./network/mock.ts";
 export { DiskReplayFetcher, RecordingFetcher } from "./network/replay.ts";
+export {
+  solveChallenge,
+  DEFAULT_SOLVERS,
+  type ChallengeSolver,
+  type ChallengeSolution,
+} from "./network/challenges.ts";
 
 // Persistence
 export { SievePersistence, type PersistenceOptions } from "./persistence/sqlite.ts";

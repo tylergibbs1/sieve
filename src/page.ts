@@ -34,10 +34,21 @@ import { NavigationHistory, resolveUrl } from "./navigation/router.ts";
 import { CookieJar } from "./navigation/cookies.ts";
 import { SieveStorage } from "./navigation/session.ts";
 import type { Fetcher, FetchResponse } from "./network/fetcher.ts";
+import {
+  solveChallenge,
+  DEFAULT_SOLVERS,
+  type ChallengeSolver,
+} from "./network/challenges.ts";
 
 export interface PageOptions {
   /** The URL this page was loaded from. */
   url?: string;
+  /** Automatically solve WAF challenges (Sucuri, Cloudflare simple, meta-refresh). */
+  solveWafChallenges?: boolean;
+  /** Custom challenge solvers (appended to built-in solvers). */
+  challengeSolvers?: ChallengeSolver[];
+  /** Maximum number of challenge retries before giving up. */
+  maxChallengeRetries?: number;
 }
 
 export class SievePage {
@@ -48,14 +59,23 @@ export class SievePage {
   private _sessionStorage: SieveStorage;
   private _fetcher: Fetcher | null;
   private _closed = false;
+  private _solveWafChallenges: boolean;
+  private _challengeSolvers: readonly ChallengeSolver[];
+  private _maxChallengeRetries: number;
 
-  constructor(fetcher: Fetcher | null = null) {
+  constructor(fetcher: Fetcher | null = null, options: PageOptions = {}) {
     this._document = parseHTML("");
     this._history = new NavigationHistory();
     this._cookies = new CookieJar();
     this._localStorage = new SieveStorage();
     this._sessionStorage = new SieveStorage();
     this._fetcher = fetcher;
+    this._solveWafChallenges = options.solveWafChallenges ?? false;
+    this._challengeSolvers = [
+      ...DEFAULT_SOLVERS,
+      ...(options.challengeSolvers ?? []),
+    ];
+    this._maxChallengeRetries = options.maxChallengeRetries ?? 3;
   }
 
   // --- Navigation ---
@@ -71,17 +91,38 @@ export class SievePage {
       ? resolveUrl(this._history.url, url)
       : url;
 
-    const cookieHeader = this._cookies.getCookieHeader(resolvedUrl);
-    const headers: Record<string, string> = {};
-    if (cookieHeader) headers["Cookie"] = cookieHeader;
+    let response = await this.fetchWithCookies(resolvedUrl);
 
-    const response = await this._fetcher.fetch(resolvedUrl, { headers });
+    // Solve WAF challenges if enabled
+    if (this._solveWafChallenges) {
+      let retries = 0;
+      while (retries < this._maxChallengeRetries) {
+        const result = solveChallenge(response, resolvedUrl, this._challengeSolvers);
+        if (!result || !result.solution.shouldRetry) break;
 
-    // Process Set-Cookie headers (case-insensitive)
-    this.processSetCookieHeaders(response.headers, response.url);
+        for (const cookie of result.solution.cookies) {
+          this._cookies.setCookie(cookie, resolvedUrl);
+        }
+
+        response = await this.fetchWithCookies(resolvedUrl);
+        retries++;
+      }
+    }
 
     this._document = parseHTML(response.body);
     this._history.push(response.url, this._document.title);
+
+    return response;
+  }
+
+  /** Fetch a URL with current cookies and process Set-Cookie headers. */
+  private async fetchWithCookies(url: string): Promise<FetchResponse> {
+    const cookieHeader = this._cookies.getCookieHeader(url);
+    const headers: Record<string, string> = {};
+    if (cookieHeader) headers["Cookie"] = cookieHeader;
+
+    const response = await this._fetcher!.fetch(url, { headers });
+    this.processSetCookieHeaders(response.headers, response.url);
 
     return response;
   }

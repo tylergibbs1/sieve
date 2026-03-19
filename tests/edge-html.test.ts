@@ -191,13 +191,6 @@ describe("DOM manipulation edge cases", () => {
     const original = doc.querySelector("div")!;
     const clone = original.clone(true);
 
-    clone.querySelector = (sel: string) => {
-      for (const el of clone.elementDescendants()) {
-        if (el.className === "inner") return el;
-      }
-      return null;
-    };
-
     // Modifying clone shouldn't affect original
     const cloneSpan = [...clone.elementDescendants()][0]!;
     cloneSpan.className = "modified";

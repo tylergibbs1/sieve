@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 170" role="img" aria-labelledby="v-title">
+  <title id="v-title">sieve — virtual browser for AI agents</title>
+  <defs>
+    <linearGradient id="vg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="vg2" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon centered -->
+  <g transform="translate(6, 0) scale(1)">
+    <path d="M16,28 L112,28 L80,72 L80,100 L48,100 L48,72 Z" fill="none" stroke="url(#vg1)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <line x1="34" y1="40" x2="94" y2="40" stroke="#8b5cf6" stroke-width="1.5" opacity="0.5"/>
+    <line x1="42" y1="52" x2="86" y2="52" stroke="#8b5cf6" stroke-width="1.5" opacity="0.6"/>
+    <line x1="50" y1="64" x2="78" y2="64" stroke="#8b5cf6" stroke-width="1.5" opacity="0.5"/>
+    <line x1="44" y1="30" x2="56" y2="70" stroke="#8b5cf6" stroke-width="1.2" opacity="0.35"/>
+    <line x1="64" y1="28" x2="64" y2="72" stroke="#8b5cf6" stroke-width="1.2" opacity="0.4"/>
+    <line x1="84" y1="30" x2="72" y2="70" stroke="#8b5cf6" stroke-width="1.2" opacity="0.35"/>
+    <circle cx="44" cy="40" r="2.5" fill="#7c3aed"/>
+    <circle cx="64" cy="40" r="2.5" fill="#7c3aed"/>
+    <circle cx="84" cy="40" r="2.5" fill="#7c3aed"/>
+    <circle cx="52" cy="52" r="2.5" fill="#7c3aed"/>
+    <circle cx="64" cy="52" r="2.5" fill="#7c3aed"/>
+    <circle cx="76" cy="52" r="2.5" fill="#7c3aed"/>
+    <circle cx="56" cy="64" r="2" fill="#8b5cf6"/>
+    <circle cx="64" cy="64" r="2" fill="#8b5cf6"/>
+    <circle cx="72" cy="64" r="2" fill="#8b5cf6"/>
+    <circle cx="64" cy="108" r="5" fill="url(#vg1)"/>
+    <circle cx="52" cy="116" r="3.5" fill="#a78bfa" opacity="0.7"/>
+    <circle cx="76" cy="118" r="3" fill="#a78bfa" opacity="0.6"/>
+    <path d="M64 100 L64 103" stroke="url(#vg2)" stroke-width="2" stroke-linecap="round"/>
+    <rect x="28" y="14" width="14" height="8" rx="2" fill="#94a3b8" opacity="0.4" transform="rotate(-6 35 18)"/>
+    <rect x="56" y="10" width="18" height="8" rx="2" fill="#94a3b8" opacity="0.35" transform="rotate(4 65 14)"/>
+    <rect x="86" y="14" width="12" height="8" rx="2" fill="#94a3b8" opacity="0.4"/>
+  </g>
+
+  <!-- Wordmark below -->
+  <text x="70" y="155" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" font-size="36" font-weight="700" letter-spacing="-1" fill="#1e1b4b">sieve</text>
+</svg>

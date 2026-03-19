@@ -18,6 +18,8 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "htmlparser2": "^11.0.0"
+    "@anthropic-ai/claude-agent-sdk": "^0.2.79",
+    "htmlparser2": "^11.0.0",
+    "zod": "^4.3.6"
   }
 }

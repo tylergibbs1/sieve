@@ -65,7 +65,7 @@ describe("Automatic WAF solving via page.goto()", () => {
               return {
                 url,
                 status: 200,
-                headers: {},
+                headers: {} as Record<string, string>,
                 body: challengeBody,
               };
             }
@@ -74,7 +74,7 @@ describe("Automatic WAF solving via page.goto()", () => {
             return {
               url,
               status: 200,
-              headers: { "content-type": "text/html" },
+              headers: { "content-type": "text/html" } as Record<string, string>,
               body: "<html><head><title>Real Page</title></head><body><h1>Welcome</h1></body></html>",
             };
           },

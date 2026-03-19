@@ -115,11 +115,17 @@ export class SievePage {
     return response;
   }
 
-  /** Fetch a URL with current cookies and process Set-Cookie headers. */
+  /** Fetch a URL with current cookies, referer, and process Set-Cookie headers. */
   private async fetchWithCookies(url: string): Promise<FetchResponse> {
     const cookieHeader = this._cookies.getCookieHeader(url);
     const headers: Record<string, string> = {};
     if (cookieHeader) headers["Cookie"] = cookieHeader;
+
+    // Pass current URL as Referer so the fetcher can compute Sec-Fetch-Site
+    const currentUrl = this._history.url;
+    if (currentUrl && currentUrl !== "about:blank") {
+      headers["Referer"] = currentUrl;
+    }
 
     const response = await this._fetcher!.fetch(url, { headers });
     this.processSetCookieHeaders(response.headers, response.url);

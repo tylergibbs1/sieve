@@ -4,6 +4,7 @@
 
 import { SievePage } from "./page.ts";
 import { LiveFetcher, type LiveFetcherOptions } from "./network/live.ts";
+import type { ProfileName, BrowserProfile } from "./network/profiles.ts";
 import { MockFetcher, type MockResponse } from "./network/mock.ts";
 import { ReplayFetcher } from "./network/mock.ts";
 import { DiskReplayFetcher, RecordingFetcher } from "./network/replay.ts";
@@ -24,6 +25,11 @@ export interface BrowserOptions {
   allowedDomains?: string[];
   /** SQLite persistence for cookies, storage, and snapshots. */
   persistence?: PersistenceOptions | true;
+  /**
+   * Browser profile for realistic HTTP headers. Eliminates trivial bot detection.
+   * "chrome-mac" | "chrome-windows" | "firefox-mac" | "safari-mac" | custom BrowserProfile
+   */
+  profile?: ProfileName | BrowserProfile;
   /** Automatically solve WAF challenges (Sucuri, Cloudflare simple, meta-refresh). */
   solveWafChallenges?: boolean;
   /** Custom challenge solvers (appended to built-in solvers). */
@@ -59,6 +65,7 @@ export class SieveBrowser {
     if (network === "live") {
       return new LiveFetcher({
         allowedDomains: options.allowedDomains,
+        profile: options.profile,
       });
     }
 
@@ -66,6 +73,7 @@ export class SieveBrowser {
       return new LiveFetcher({
         ...network.live,
         allowedDomains: options.allowedDomains ?? network.live.allowedDomains,
+        profile: options.profile ?? network.live.profile,
       });
     }
 

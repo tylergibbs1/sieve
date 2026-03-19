@@ -76,6 +76,16 @@ export { SieveStorage } from "./navigation/session.ts";
 // Network
 export type { Fetcher, FetchResponse, FetchOptions } from "./network/fetcher.ts";
 export { LiveFetcher } from "./network/live.ts";
+export {
+  PROFILES,
+  CHROME_MAC,
+  CHROME_WINDOWS,
+  FIREFOX_MAC,
+  SAFARI_MAC,
+  buildNavigationHeaders,
+  type BrowserProfile,
+  type ProfileName,
+} from "./network/profiles.ts";
 export { MockFetcher, ReplayFetcher } from "./network/mock.ts";
 export { DiskReplayFetcher, RecordingFetcher } from "./network/replay.ts";
 export {

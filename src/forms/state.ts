@@ -89,9 +89,17 @@ export function validateForm(formEl: SieveElement): ValidationResult {
           errors.push({ element: input, message: "Please select a value" });
           continue;
         }
-      } else if (type === "checkbox" && !isChecked(input)) {
-        errors.push({ element: input, message: "Please check this box" });
-        continue;
+      } else if (type === "checkbox") {
+        if (!isChecked(input)) {
+          errors.push({ element: input, message: "Please check this box" });
+          continue;
+        }
+        // Checked checkbox passes required regardless of value attribute
+      } else if (type === "radio") {
+        if (!isChecked(input)) {
+          errors.push({ element: input, message: "Please select an option" });
+          continue;
+        }
       } else if (!value) {
         errors.push({ element: input, message: "Please fill out this field" });
         continue;

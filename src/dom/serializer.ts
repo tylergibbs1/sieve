@@ -1,5 +1,6 @@
 /**
  * Serializes a DOM tree back to an HTML string.
+ * Uses Bun.escapeHTML for native-speed HTML entity escaping (20 GB/s).
  */
 
 import { SieveElement } from "./element.ts";
@@ -12,17 +13,14 @@ const VOID_ELEMENTS = new Set([
   "link", "meta", "param", "source", "track", "wbr",
 ]);
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+/** Escape text content. Bun.escapeHTML handles &, <, >, ", ' at native speed. */
+function escapeText(text: string): string {
+  return Bun.escapeHTML(text);
 }
 
+/** Escape attribute values. Bun.escapeHTML covers all needed characters. */
 function escapeAttr(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;");
+  return Bun.escapeHTML(text);
 }
 
 function serializeNode(node: SieveNode): string {
@@ -35,7 +33,7 @@ function serializeNode(node: SieveNode): string {
   }
 
   if (node instanceof SieveText) {
-    return escapeHtml(node.data);
+    return escapeText(node.data);
   }
 
   if (node instanceof SieveComment) {

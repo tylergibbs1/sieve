@@ -123,6 +123,7 @@ export { createBrowserTool, type BrowserAction, type BrowserToolOptions } from "
 export {
   executeSandboxed,
   executeDocumentScripts,
+  scanScript,
   type SandboxResult,
 } from "./js/sandbox.ts";
 

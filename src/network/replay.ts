@@ -41,14 +41,22 @@ export class DiskReplayFetcher implements Fetcher {
   async fetch(url: string, _options?: FetchOptions): Promise<FetchResponse> {
     const base = urlToFilename(url);
     const metaFile = Bun.file(`${this.dir}/${base}.meta.json`);
-    const bodyFile = Bun.file(`${this.dir}/${base}.body`);
 
     if (!(await metaFile.exists())) {
       throw new Error(`No recording found for URL: ${url}\n  Expected: ${this.dir}/${base}.meta.json`);
     }
 
     const meta = await metaFile.json() as RecordingMeta;
-    const body = await bodyFile.text();
+
+    // Try compressed first (.body.gz), fall back to uncompressed (.body)
+    const gzFile = Bun.file(`${this.dir}/${base}.body.gz`);
+    let body: string;
+    if (await gzFile.exists()) {
+      const compressed = new Uint8Array(await gzFile.arrayBuffer());
+      body = new TextDecoder().decode(Bun.gunzipSync(compressed));
+    } else {
+      body = await Bun.file(`${this.dir}/${base}.body`).text();
+    }
 
     return {
       url: meta.url,
@@ -58,7 +66,7 @@ export class DiskReplayFetcher implements Fetcher {
     };
   }
 
-  /** Record a response to disk. */
+  /** Record a response to disk. Uses Bun.gzipSync for compressed body storage. */
   async record(url: string, response: FetchResponse): Promise<void> {
     const base = urlToFilename(url);
 
@@ -69,9 +77,12 @@ export class DiskReplayFetcher implements Fetcher {
       timestamp: Date.now(),
     };
 
+    // Compress body with Bun.gzipSync — typically 5-10x smaller for HTML
+    const compressed = Bun.gzipSync(Buffer.from(response.body));
+
     await Promise.all([
       Bun.write(`${this.dir}/${base}.meta.json`, JSON.stringify(meta, null, 2)),
-      Bun.write(`${this.dir}/${base}.body`, response.body),
+      Bun.write(`${this.dir}/${base}.body.gz`, compressed),
     ]);
   }
 

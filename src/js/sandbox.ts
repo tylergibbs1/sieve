@@ -127,7 +127,7 @@ export async function executeSandboxed(
   doc: SieveDocument,
   options: SandboxExecOptions = {},
 ): Promise<SandboxResult> {
-  const start = performance.now();
+  const startNs = Bun.nanoseconds();
   const consoleOutput: string[] = [];
   const url = options.url ?? "about:blank";
   const registry = new ElementRegistry();
@@ -178,7 +178,7 @@ export async function executeSandboxed(
     ok,
     console: consoleOutput,
     error,
-    durationMs: performance.now() - start,
+    durationMs: (Bun.nanoseconds() - startNs) / 1_000_000,
   };
 }
 
@@ -327,6 +327,23 @@ function handleHostCall(
 
     default:
       return null;
+  }
+}
+
+/**
+ * Scan a script for imports/exports using Bun.Transpiler.
+ * Useful for understanding what a script tries to load before executing it.
+ */
+export function scanScript(code: string): { imports: string[]; exports: string[] } {
+  const transpiler = new Bun.Transpiler({ loader: "js" });
+  try {
+    const result = transpiler.scan(code);
+    return {
+      imports: result.imports.map((i: { path: string }) => i.path),
+      exports: result.exports as string[],
+    };
+  } catch {
+    return { imports: [], exports: [] };
   }
 }
 

@@ -16,11 +16,13 @@ export function hashSnapshot(snapshot: DocumentSnapshot): number | bigint {
 }
 
 /**
- * Check if two snapshots represent the same DOM state
- * without performing a full structural diff.
+ * Check if two snapshots represent the same DOM state.
+ * Uses Bun.deepEquals for direct structural comparison — no
+ * serialization or hashing needed. Faster than hash comparison
+ * for small/medium documents.
  */
 export function snapshotsEqual(a: DocumentSnapshot, b: DocumentSnapshot): boolean {
-  return hashSnapshot(a) === hashSnapshot(b);
+  return Bun.deepEquals(a, b);
 }
 
 /**

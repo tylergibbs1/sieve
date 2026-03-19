@@ -65,9 +65,11 @@ describe("Workflow: Login form flow", () => {
     let tree = page.accessibilityTree();
     let serialized = tree.serialize();
     expect(serialized).toContain("[form]");
-    expect(serialized).toContain("[textbox] Username");
-    expect(serialized).toContain("[textbox] Password");
-    expect(serialized).toContain("[button] Sign In");
+    expect(serialized).toContain("[textbox]");
+    expect(serialized).toContain("Username");
+    expect(serialized).toContain("Password");
+    expect(serialized).toContain("[button]");
+    expect(serialized).toContain("Sign In");
 
     // Step 3: Fill form
     await page.type("#user", "alice");
@@ -93,7 +95,8 @@ describe("Workflow: Login form flow", () => {
     // Step 7: Navigate to settings (cookie should persist)
     tree = page.accessibilityTree();
     serialized = tree.serialize();
-    expect(serialized).toContain("[link] Settings");
+    expect(serialized).toContain("[link]");
+    expect(serialized).toContain("Settings");
 
     await page.click('a[href="/settings"]');
     expect(page.title).toBe("Settings");

@@ -33,7 +33,8 @@ export { getComputedStyle, isVisible } from "./css/computed.ts";
 
 // Accessibility
 export { buildAccessibilityTree, type A11yNode } from "./a11y/tree.ts";
-export { serializeAccessibilityTree } from "./a11y/serialize.ts";
+export { serializeAccessibilityTree, type SerializeOptions } from "./a11y/serialize.ts";
+export { assignRefs, resolveRef, isLandmark, isSignificant, type RefMap } from "./a11y/refs.ts";
 export { getRole, getImplicitRole, getHeadingLevel } from "./a11y/roles.ts";
 
 // Snapshots
@@ -58,6 +59,7 @@ export {
   isChecked,
   setChecked,
   serializeForm,
+  serializeFormURLEncoded,
   validateForm,
   getSelectedValues,
   setSelectedValues,

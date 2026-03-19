@@ -37,6 +37,7 @@ const JS_SHELL_SITES = new Set([
   "https://www.reuters.com",
   "https://www.ssa.gov",
   "https://quotes.toscrape.com",
+  "https://www.amazon.com/s?k=books",
 ]);
 
 const sites: SiteEntry[] = await Bun.file(

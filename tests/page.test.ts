@@ -188,7 +188,8 @@ describe("SievePage", () => {
 
     expect(serialized).toContain("[page] Test");
     expect(serialized).toContain("[navigation] Main");
-    expect(serialized).toContain("[link] Home");
+    expect(serialized).toContain("[link]");
+    expect(serialized).toContain("Home");
     expect(serialized).toContain("[heading:1] Title");
 
     // Find by role

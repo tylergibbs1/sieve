@@ -10,7 +10,8 @@ import { serialize } from "./dom/serializer.ts";
 import { querySelector, querySelectorAll, matchesSelector } from "./css/selector.ts";
 import { isVisible } from "./css/computed.ts";
 import { buildAccessibilityTree, type A11yNode } from "./a11y/tree.ts";
-import { serializeAccessibilityTree } from "./a11y/serialize.ts";
+import { serializeAccessibilityTree, type SerializeOptions } from "./a11y/serialize.ts";
+import { assignRefs, resolveRef, type RefMap } from "./a11y/refs.ts";
 import {
   captureSnapshot,
   restoreSnapshot,
@@ -208,10 +209,10 @@ export class SievePage {
 
   // --- Interactions ---
 
-  /** Click an element by selector or element reference. */
+  /** Click an element by CSS selector, @ref, or element reference. */
   async click(target: string | SieveElement): Promise<ClickResult> {
     this.assertOpen();
-    const el = typeof target === "string" ? this.querySelector(target) : target;
+    const el = typeof target === "string" ? this.resolveTarget(target) : target;
     if (!el) {
       return {
         target: new SieveElement("unknown"),
@@ -236,37 +237,37 @@ export class SievePage {
     return result;
   }
 
-  /** Type text into an input or textarea. Replaces the current value. */
+  /** Type text into an input or textarea. Accepts CSS selector, @ref, or element. */
   async type(target: string | SieveElement, text: string): Promise<TypeResult> {
     this.assertOpen();
-    const el = typeof target === "string" ? this.querySelector(target) : target;
+    const el = typeof target === "string" ? this.resolveTarget(target) : target;
     if (!el) {
       return { success: false, value: "", effect: `Element not found: ${target}` };
     }
     return simulateType(el, text);
   }
 
-  /** Clear an input's value. */
+  /** Clear an input's value. Accepts CSS selector, @ref, or element. */
   clear(target: string | SieveElement): TypeResult {
-    const el = typeof target === "string" ? this.querySelector(target) : target;
+    const el = typeof target === "string" ? this.resolveTarget(target) : target;
     if (!el) {
       return { success: false, value: "", effect: `Element not found: ${target}` };
     }
     return simulateClear(el);
   }
 
-  /** Select options in a <select> element. */
+  /** Select options in a <select> element. Accepts CSS selector, @ref, or element. */
   select(target: string | SieveElement, ...values: string[]): SelectResult {
-    const el = typeof target === "string" ? this.querySelector(target) : target;
+    const el = typeof target === "string" ? this.resolveTarget(target) : target;
     if (!el) {
       return { success: false, selectedValues: [], effect: `Element not found: ${target}` };
     }
     return simulateSelect(el, ...values);
   }
 
-  /** Select options by their visible text label. */
+  /** Select options by their visible text label. Accepts CSS selector, @ref, or element. */
   selectByText(target: string | SieveElement, ...labels: string[]): SelectResult {
-    const el = typeof target === "string" ? this.querySelector(target) : target;
+    const el = typeof target === "string" ? this.resolveTarget(target) : target;
     if (!el) {
       return { success: false, selectedValues: [], effect: `Element not found: ${target}` };
     }
@@ -316,9 +317,27 @@ export class SievePage {
 
   // --- Accessibility tree ---
 
-  /** Build the accessibility tree for the current page. */
+  /** The current ref map (populated after accessibilityTree() is called). */
+  private _refMap: RefMap | null = null;
+
+  /**
+   * Build the accessibility tree with @ref addressing.
+   * Interactive elements get stable refs (@e1, @e2, ...) that can be
+   * used with click(), type(), select() instead of CSS selectors.
+   */
   accessibilityTree(): AccessibilityTreeHandle {
-    return new AccessibilityTreeHandle(buildAccessibilityTree(this._document));
+    const tree = buildAccessibilityTree(this._document);
+    this._refMap = assignRefs(tree);
+    return new AccessibilityTreeHandle(tree, this._refMap);
+  }
+
+  /**
+   * Resolve a @ref to the DOM element it points to.
+   * Returns null if the ref doesn't exist or the tree hasn't been built.
+   */
+  resolveRef(ref: string): SieveElement | null {
+    if (!this._refMap) return null;
+    return resolveRef(ref, this._refMap);
   }
 
   // --- Snapshots ---
@@ -393,6 +412,17 @@ export class SievePage {
     }
   }
 
+  /**
+   * Resolve a target string to a DOM element.
+   * Supports @refs (@e1, @e2, ...) and CSS selectors.
+   */
+  private resolveTarget(target: string): SieveElement | null {
+    if (target.startsWith("@e")) {
+      return this.resolveRef(target);
+    }
+    return this.querySelector(target);
+  }
+
   private assertOpen(): void {
     if (this._closed) throw new Error("Page is closed");
   }
@@ -430,13 +460,32 @@ export class FormHandle {
   }
 }
 
-/** Handle for the accessibility tree. */
+/** Handle for the accessibility tree with ref-based addressing. */
 export class AccessibilityTreeHandle {
-  constructor(readonly root: A11yNode) {}
+  constructor(
+    readonly root: A11yNode,
+    readonly refs: RefMap,
+  ) {}
 
-  /** Serialize to compact text for LLM consumption. */
-  serialize(): string {
-    return serializeAccessibilityTree(this.root);
+  /**
+   * Serialize to compact text for LLM consumption.
+   * Options:
+   *   interactive: true — only show interactive elements + landmarks
+   *   maxLength: 4000 — truncate output
+   *   maxDepth: 5 — limit tree depth
+   */
+  serialize(options?: SerializeOptions): string {
+    return serializeAccessibilityTree(this.root, options);
+  }
+
+  /** Number of interactive elements with refs. */
+  get refCount(): number {
+    return this.refs.count;
+  }
+
+  /** Resolve a @ref to its a11y node. */
+  getByRef(ref: string): A11yNode | null {
+    return this.refs.byRef.get(ref) ?? null;
   }
 
   /** Find nodes by role. */

@@ -24,6 +24,8 @@ export interface A11yNode {
   selected?: boolean;
   readonly?: boolean;
   placeholder?: string;
+  /** Stable ref for agent interaction (@e1, @e2, etc). Assigned by assignRefs(). */
+  ref?: string;
   children: A11yNode[];
   /** Back-reference to the DOM element. */
   element?: SieveElement;

@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="meshGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+    <linearGradient id="flowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c4b5fd" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="dotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0e7ff"/>
+      <stop offset="100%" stop-color="#a5b4fc"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer ring: represents the browser frame -->
+  <circle cx="256" cy="256" r="230" stroke="url(#meshGrad)" stroke-width="6" fill="none" opacity="0.3"/>
+
+  <!-- Sieve mesh: the grid that filters -->
+  <!-- Horizontal lines -->
+  <line x1="100" y1="200" x2="412" y2="200" stroke="url(#meshGrad)" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
+  <line x1="80" y1="248" x2="432" y2="248" stroke="url(#meshGrad)" stroke-width="3.5" stroke-linecap="round" opacity="0.85"/>
+  <line x1="80" y1="296" x2="432" y2="296" stroke="url(#meshGrad)" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
+  <line x1="100" y1="344" x2="412" y2="344" stroke="url(#meshGrad)" stroke-width="3.5" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- Vertical lines -->
+  <line x1="160" y1="160" x2="160" y2="384" stroke="url(#meshGrad)" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+  <line x1="220" y1="140" x2="220" y2="396" stroke="url(#meshGrad)" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
+  <line x1="280" y1="140" x2="280" y2="396" stroke="url(#meshGrad)" stroke-width="3.5" stroke-linecap="round" opacity="0.75"/>
+  <line x1="340" y1="160" x2="340" y2="384" stroke="url(#meshGrad)" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Data particles falling through the sieve (above mesh) -->
+  <!-- Raw HTML blobs above -->
+  <rect x="175" y="80" width="22" height="14" rx="3" fill="#94a3b8" opacity="0.5" transform="rotate(-8 186 87)"/>
+  <rect x="240" y="65" width="28" height="14" rx="3" fill="#94a3b8" opacity="0.4" transform="rotate(5 254 72)"/>
+  <rect x="305" y="78" width="18" height="14" rx="3" fill="#94a3b8" opacity="0.45" transform="rotate(-3 314 85)"/>
+  <rect x="205" y="105" width="24" height="12" rx="3" fill="#94a3b8" opacity="0.35"/>
+  <rect x="275" y="100" width="20" height="12" rx="3" fill="#94a3b8" opacity="0.4" transform="rotate(7 285 106)"/>
+  <rect x="145" y="115" width="16" height="10" rx="2" fill="#94a3b8" opacity="0.3"/>
+  <rect x="340" y="110" width="22" height="10" rx="2" fill="#94a3b8" opacity="0.3" transform="rotate(-5 351 115)"/>
+
+  <!-- Filtered structured data below the mesh -->
+  <!-- Clean nodes that passed through -->
+  <circle cx="190" cy="410" r="8" fill="url(#dotGrad)" opacity="0.9"/>
+  <circle cx="250" cy="425" r="10" fill="url(#dotGrad)" opacity="0.95"/>
+  <circle cx="310" cy="412" r="7" fill="url(#dotGrad)" opacity="0.85"/>
+  <circle cx="220" cy="440" r="6" fill="url(#dotGrad)" opacity="0.7"/>
+  <circle cx="280" cy="445" r="8" fill="url(#dotGrad)" opacity="0.8"/>
+  <circle cx="160" cy="430" r="5" fill="url(#dotGrad)" opacity="0.6"/>
+  <circle cx="345" cy="435" r="6" fill="url(#dotGrad)" opacity="0.65"/>
+
+  <!-- Flow lines: particles passing through the grid -->
+  <path d="M190 200 L190 410" stroke="url(#flowGrad)" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.5"/>
+  <path d="M250 200 L250 425" stroke="url(#flowGrad)" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.6"/>
+  <path d="M310 200 L310 412" stroke="url(#flowGrad)" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.5"/>
+
+  <!-- Grid intersection highlights (the "nodes" in the sieve) -->
+  <circle cx="160" cy="200" r="5" fill="#8b5cf6" opacity="0.8"/>
+  <circle cx="220" cy="200" r="5" fill="#8b5cf6" opacity="0.9"/>
+  <circle cx="280" cy="200" r="5" fill="#8b5cf6" opacity="0.9"/>
+  <circle cx="340" cy="200" r="5" fill="#8b5cf6" opacity="0.8"/>
+
+  <circle cx="160" cy="248" r="5.5" fill="#7c3aed" opacity="0.9"/>
+  <circle cx="220" cy="248" r="5.5" fill="#7c3aed" opacity="1"/>
+  <circle cx="280" cy="248" r="5.5" fill="#7c3aed" opacity="1"/>
+  <circle cx="340" cy="248" r="5.5" fill="#7c3aed" opacity="0.9"/>
+
+  <circle cx="160" cy="296" r="5.5" fill="#7c3aed" opacity="0.9"/>
+  <circle cx="220" cy="296" r="5.5" fill="#7c3aed" opacity="1"/>
+  <circle cx="280" cy="296" r="5.5" fill="#7c3aed" opacity="1"/>
+  <circle cx="340" cy="296" r="5.5" fill="#7c3aed" opacity="0.9"/>
+
+  <circle cx="160" cy="344" r="5" fill="#8b5cf6" opacity="0.7"/>
+  <circle cx="220" cy="344" r="5" fill="#8b5cf6" opacity="0.8"/>
+  <circle cx="280" cy="344" r="5" fill="#8b5cf6" opacity="0.8"/>
+  <circle cx="340" cy="344" r="5" fill="#8b5cf6" opacity="0.7"/>
+
+  <!-- Accent: a11y tree bracket on the right -->
+  <g transform="translate(390, 220)" opacity="0.6">
+    <path d="M0 0 L12 0 L12 120 L0 120" stroke="#a78bfa" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="16" y1="20" x2="40" y2="20" stroke="#c4b5fd" stroke-width="2" stroke-linecap="round"/>
+    <line x1="16" y1="44" x2="48" y2="44" stroke="#c4b5fd" stroke-width="2" stroke-linecap="round"/>
+    <line x1="24" y1="60" x2="44" y2="60" stroke="#ddd6fe" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="16" y1="80" x2="42" y2="80" stroke="#c4b5fd" stroke-width="2" stroke-linecap="round"/>
+    <line x1="24" y1="96" x2="38" y2="96" stroke="#ddd6fe" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+</svg>

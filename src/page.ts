@@ -40,6 +40,12 @@ import {
   DEFAULT_SOLVERS,
   type ChallengeSolver,
 } from "./network/challenges.ts";
+import {
+  executeSandboxed,
+  executeDocumentScripts,
+  type SandboxResult,
+  type SandboxExecOptions,
+} from "./js/sandbox.ts";
 
 export interface PageOptions {
   /** The URL this page was loaded from. */
@@ -313,6 +319,27 @@ export class SievePage {
         this._history.push(response.url, this._document.title);
       }
     }
+  }
+
+  // --- JavaScript execution (Layer 2) ---
+
+  /**
+   * Execute JavaScript code in a sandboxed QuickJS WASM environment.
+   * The code has access to DOM APIs (document.querySelector, etc.)
+   * but no network, no eval, no module imports.
+   */
+  async executeJS(code: string): Promise<SandboxResult> {
+    this.assertOpen();
+    return executeSandboxed(code, this._document, { url: this._history.url });
+  }
+
+  /**
+   * Execute all inline <script> tags in the current document.
+   * External scripts (src=) are skipped.
+   */
+  async executeScripts(): Promise<SandboxResult[]> {
+    this.assertOpen();
+    return executeDocumentScripts(this._document, { url: this._history.url });
   }
 
   // --- Accessibility tree ---

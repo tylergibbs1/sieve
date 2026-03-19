@@ -119,6 +119,13 @@ export { asPuppeteer } from "./compat/puppeteer.ts";
 // AI SDK tool
 export { createBrowserTool, type BrowserAction, type BrowserToolOptions } from "./tool.ts";
 
+// JavaScript sandbox (Layer 2)
+export {
+  executeSandboxed,
+  executeDocumentScripts,
+  type SandboxResult,
+} from "./js/sandbox.ts";
+
 // Resource limits & events
 export {
   DEFAULT_LIMITS,

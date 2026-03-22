@@ -172,6 +172,55 @@ const doc = await parseHTMLAsync(html, {
 });
 ```
 
+## JavaScript Execution (Layer 2)
+
+Execute page scripts in a sandboxed QuickJS WASM environment with DOM bindings:
+
+```typescript
+// Execute arbitrary JS against the virtual DOM
+const result = await page.executeJS(`
+  document.querySelector("#app").textContent = "Dynamic";
+  document.querySelector("#menu").classList.add("open");
+`);
+console.log(result.ok); // true — changes persist to the real DOM
+
+// Execute all inline <script> tags in the document
+await page.executeScripts();
+```
+
+The sandbox has `document.querySelector`, `createElement`, `textContent`, `classList`, `style`, `innerHTML` — but no `fetch`, no `eval`, no network access.
+
+## @Ref Element Addressing
+
+Interactive elements get stable `@e1`, `@e2` refs from the accessibility tree. Agents use refs instead of fragile CSS selectors:
+
+```typescript
+const tree = page.accessibilityTree();
+console.log(tree.serialize({ interactive: true }));
+// [form] Registration
+//   [textbox] @e1 Email (required)
+//   [textbox] @e2 Password (required)
+//   [checkbox] @e3 (unchecked)
+//   [button] @e4 Submit
+
+await page.type("@e1", "alice@example.com");
+await page.type("@e2", "secret123");
+await page.click("@e3");  // check the checkbox
+await page.click("@e4");  // submit
+```
+
+## Browser Profiles & WAF Solving
+
+Realistic HTTP headers and automatic WAF challenge solving:
+
+```typescript
+const browser = new SieveBrowser({
+  network: "live",
+  profile: "chrome-mac",       // realistic Chrome headers
+  solveWafChallenges: true,    // auto-solve Sucuri, Cloudflare simple, meta-refresh
+});
+```
+
 ## Persistence
 
 SQLite-backed storage for cookies, localStorage, and snapshots:
@@ -262,15 +311,15 @@ page.close();
 ## What sieve Is NOT
 
 - **Not a real browser.** It will never render pixels, play video, or run WebGL.
-- **Not trying to pass bot detection.** No TLS fingerprint, no canvas, no WebRTC.
-- **Not a full JS runtime.** Static HTML parsing only (Layer 0). JS-heavy SPAs that build their DOM entirely in JavaScript won't produce meaningful output yet.
+- **Not trying to pass bot detection.** No TLS fingerprint, no canvas, no WebRTC. Browser profiles reduce false positives but won't fool Cloudflare Turnstile or DataDome.
+- **Not a full browser JS engine.** sieve includes a sandboxed QuickJS WASM runtime (Layer 2) for executing page scripts against the virtual DOM. Simple scripts — show/hide logic, tab switching, DOM manipulation — work. Complex SPAs with heavy framework code (React hydration, full Angular apps) may not work perfectly.
 
 ## Tested Against Real Websites
 
-sieve is tested against 47 real websites including Amazon, BBC, GitHub, Wikipedia, GOV.UK, MDN, and Stack Overflow. 608 tests covering parsing, selectors, accessibility trees, forms, cookies, snapshots, and 141 edge cases.
+sieve is tested against 47 real websites including Amazon, BBC, GitHub, Wikipedia, GOV.UK, MDN, and Stack Overflow. 690 tests covering parsing, selectors, accessibility trees, forms, cookies, snapshots, JS sandbox, and 141 edge cases.
 
 ```bash
-bun test                    # 608 tests
+bun test                    # 690 tests
 bun test --timeout 120000   # includes live site tests
 bun benchmarks/core.ts      # performance benchmarks
 ```
@@ -281,24 +330,33 @@ bun benchmarks/core.ts      # performance benchmarks
 src/
 ├── dom/          # Virtual DOM, htmlparser2, serializer, HTMLRewriter preprocessing
 ├── css/          # CSS selector engine, computed styles (visibility/display)
-├── a11y/         # Accessibility tree builder + LLM-optimized serializer
+├── a11y/         # Accessibility tree, @ref addressing, LLM-optimized serializer
 ├── forms/        # Form state machine, HTML5 validation, serialization
-├── actions/      # Click, type, select simulation
+├── actions/      # Click, type, select, scroll, wait simulation
+├── rules/        # Declarative rule engine (Layer 1)
+├── js/           # QuickJS WASM sandbox (Layer 2)
 ├── navigation/   # URL routing, cookie jar (RFC 6265), session storage
 ├── snapshot/     # Capture, diff, restore, Bun.hash change detection
-├── network/      # Live HTTP, mock, disk replay (Bun.file/Bun.write)
+├── network/      # Live HTTP, mock, disk replay, browser profiles, WAF solving
 ├── persistence/  # SQLite (bun:sqlite) for cookies, storage, snapshots
+├── compat/       # Puppeteer compatibility layer
 ├── page.ts       # SievePage
 ├── browser.ts    # SieveBrowser
+├── tool.ts       # AI SDK tool wrapper (Vercel AI SDK)
 └── index.ts      # Public API
 ```
 
-**Single dependency:** `htmlparser2` for HTML tokenization. Everything else is built on Bun primitives.
+**Core dependency:** `htmlparser2` for HTML tokenization, `quickjs-emscripten` for JS sandbox. Everything else is built on Bun primitives.
 
 ## Bun Features Used
 
 - **bun:sqlite** — Cookie/storage/snapshot persistence with WAL mode
 - **Bun.hash** — Wyhash for snapshot equality, CRC32 for content IDs, SHA-256 for digests
+- **Bun.escapeHTML** — Native HTML entity escaping at 20 GB/s in the serializer
+- **Bun.deepEquals** — Structural snapshot comparison without serialization
+- **Bun.gzipSync** — Compressed disk replay recordings (5-10x smaller)
+- **Bun.nanoseconds** — Precision timing for JS sandbox execution
+- **Bun.Transpiler** — Script import/export analysis before sandbox execution
 - **HTMLRewriter** — Native streaming HTML preprocessing (strip scripts, sanitize, extract metadata)
 - **Bun.file / Bun.write** — Disk-backed replay recording
 - **Bun.Glob** — Scanning replay directories

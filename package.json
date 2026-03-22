@@ -9,7 +9,9 @@
   },
   "scripts": {
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "bench": "bun benchmarks/core.ts",
+    "fuzz": "bun fuzz/run.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -19,8 +21,6 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.79",
-    "@jitl/quickjs-singlefile-browser-release-sync": "^0.32.0",
-    "@sebastianwessel/quickjs": "^3.0.1",
     "htmlparser2": "^11.0.0",
     "quickjs-emscripten": "^0.32.0",
     "zod": "^4.3.6"

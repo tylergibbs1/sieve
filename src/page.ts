@@ -12,6 +12,7 @@ import { isVisible } from "./css/computed.ts";
 import { buildAccessibilityTree, type A11yNode } from "./a11y/tree.ts";
 import { serializeAccessibilityTree, type SerializeOptions } from "./a11y/serialize.ts";
 import { assignRefs, resolveRef, type RefMap } from "./a11y/refs.ts";
+import { diffAccessibilityTrees } from "./a11y/diff.ts";
 import {
   captureSnapshot,
   restoreSnapshot,
@@ -31,8 +32,15 @@ import {
 import { simulateClick, type ClickResult } from "./actions/click.ts";
 import { simulateType, simulateClear, type TypeResult } from "./actions/type.ts";
 import { simulateSelect, simulateSelectByText, type SelectResult } from "./actions/select.ts";
+import {
+  checkPolicy,
+  PolicyDeniedError,
+  DEFAULT_POLICY,
+  type ActionPolicy,
+  type ActionType,
+} from "./actions/policy.ts";
 import { NavigationHistory, resolveUrl } from "./navigation/router.ts";
-import { CookieJar } from "./navigation/cookies.ts";
+import { CookieJar, type Cookie } from "./navigation/cookies.ts";
 import { SieveStorage } from "./navigation/session.ts";
 import type { Fetcher, FetchResponse } from "./network/fetcher.ts";
 import {
@@ -58,6 +66,33 @@ export interface PageOptions {
   maxChallengeRetries?: number;
 }
 
+/** Semantic locator: find elements by role and/or name in the a11y tree. */
+export interface SemanticLocator {
+  role: string;
+  name?: string;
+}
+
+/** A single action in a batch. */
+export type BatchAction =
+  | { action: "click"; target: string | SieveElement | SemanticLocator }
+  | { action: "type"; target: string | SieveElement | SemanticLocator; text: string }
+  | { action: "clear"; target: string | SieveElement | SemanticLocator }
+  | { action: "select"; target: string | SieveElement | SemanticLocator; values: string[] };
+
+export type BatchResult = {
+  results: (ClickResult | TypeResult | SelectResult)[];
+  /** If the batch was stopped early due to navigation, this is the index that triggered it. */
+  stoppedAtNavigation?: number;
+};
+
+/** Portable session state for export/import. */
+export interface SessionState {
+  cookies: Cookie[];
+  localStorage: Record<string, string>;
+  sessionStorage: Record<string, string>;
+  url: string;
+}
+
 export class SievePage {
   private _document: SieveDocument;
   private _history: NavigationHistory;
@@ -69,6 +104,7 @@ export class SievePage {
   private _solveWafChallenges: boolean;
   private _challengeSolvers: readonly ChallengeSolver[];
   private _maxChallengeRetries: number;
+  private _policy: ActionPolicy = DEFAULT_POLICY;
 
   constructor(fetcher: Fetcher | null = null, options: PageOptions = {}) {
     this._document = parseHTML("");
@@ -85,11 +121,32 @@ export class SievePage {
     this._maxChallengeRetries = options.maxChallengeRetries ?? 3;
   }
 
+  // --- Policy ---
+
+  /** Set the action policy for this page. */
+  setPolicy(policy: ActionPolicy): void {
+    this._policy = policy;
+  }
+
+  /** Get the current action policy. */
+  get policy(): ActionPolicy {
+    return this._policy;
+  }
+
+  /** Check policy and throw if denied. */
+  private enforcePolicy(action: ActionType): void {
+    const result = checkPolicy(this._policy, action);
+    if (result.decision === "deny") {
+      throw new PolicyDeniedError(action);
+    }
+  }
+
   // --- Navigation ---
 
   /** Navigate to a URL. Requires a network fetcher. */
   async goto(url: string): Promise<FetchResponse> {
     this.assertOpen();
+    this.enforcePolicy("navigation");
     if (!this._fetcher) {
       throw new Error("No network fetcher configured. Use setContent() for offline mode.");
     }
@@ -215,15 +272,16 @@ export class SievePage {
 
   // --- Interactions ---
 
-  /** Click an element by CSS selector, @ref, or element reference. */
-  async click(target: string | SieveElement): Promise<ClickResult> {
+  /** Click an element by CSS selector, @ref, semantic locator, or element reference. */
+  async click(target: string | SieveElement | SemanticLocator): Promise<ClickResult> {
     this.assertOpen();
-    const el = typeof target === "string" ? this.resolveTarget(target) : target;
+    this.enforcePolicy("click");
+    const el = this.resolveAnyTarget(target);
     if (!el) {
       return {
         target: new SieveElement("unknown"),
         success: false,
-        effect: `Element not found: ${target}`,
+        effect: `Element not found: ${formatTarget(target)}`,
       };
     }
 
@@ -243,41 +301,87 @@ export class SievePage {
     return result;
   }
 
-  /** Type text into an input or textarea. Accepts CSS selector, @ref, or element. */
-  async type(target: string | SieveElement, text: string): Promise<TypeResult> {
+  /** Type text into an input or textarea. Accepts CSS selector, @ref, semantic locator, or element. */
+  async type(target: string | SieveElement | SemanticLocator, text: string): Promise<TypeResult> {
     this.assertOpen();
-    const el = typeof target === "string" ? this.resolveTarget(target) : target;
+    this.enforcePolicy("type");
+    const el = this.resolveAnyTarget(target);
     if (!el) {
-      return { success: false, value: "", effect: `Element not found: ${target}` };
+      return { success: false, value: "", effect: `Element not found: ${formatTarget(target)}` };
     }
     return simulateType(el, text);
   }
 
-  /** Clear an input's value. Accepts CSS selector, @ref, or element. */
-  clear(target: string | SieveElement): TypeResult {
-    const el = typeof target === "string" ? this.resolveTarget(target) : target;
+  /** Clear an input's value. Accepts CSS selector, @ref, semantic locator, or element. */
+  clear(target: string | SieveElement | SemanticLocator): TypeResult {
+    this.enforcePolicy("clear");
+    const el = this.resolveAnyTarget(target);
     if (!el) {
-      return { success: false, value: "", effect: `Element not found: ${target}` };
+      return { success: false, value: "", effect: `Element not found: ${formatTarget(target)}` };
     }
     return simulateClear(el);
   }
 
-  /** Select options in a <select> element. Accepts CSS selector, @ref, or element. */
-  select(target: string | SieveElement, ...values: string[]): SelectResult {
-    const el = typeof target === "string" ? this.resolveTarget(target) : target;
+  /** Select options in a <select> element. Accepts CSS selector, @ref, semantic locator, or element. */
+  select(target: string | SieveElement | SemanticLocator, ...values: string[]): SelectResult {
+    this.enforcePolicy("select");
+    const el = this.resolveAnyTarget(target);
     if (!el) {
-      return { success: false, selectedValues: [], effect: `Element not found: ${target}` };
+      return { success: false, selectedValues: [], effect: `Element not found: ${formatTarget(target)}` };
     }
     return simulateSelect(el, ...values);
   }
 
-  /** Select options by their visible text label. Accepts CSS selector, @ref, or element. */
-  selectByText(target: string | SieveElement, ...labels: string[]): SelectResult {
-    const el = typeof target === "string" ? this.resolveTarget(target) : target;
+  /** Select options by their visible text label. Accepts CSS selector, @ref, semantic locator, or element. */
+  selectByText(target: string | SieveElement | SemanticLocator, ...labels: string[]): SelectResult {
+    const el = this.resolveAnyTarget(target);
     if (!el) {
-      return { success: false, selectedValues: [], effect: `Element not found: ${target}` };
+      return { success: false, selectedValues: [], effect: `Element not found: ${formatTarget(target)}` };
     }
     return simulateSelectByText(el, ...labels);
+  }
+
+  // --- Batch actions ---
+
+  /**
+   * Execute multiple actions in sequence. Returns results for each action.
+   * Stops early if an action triggers navigation (the page changes).
+   */
+  async batch(actions: BatchAction[]): Promise<BatchResult> {
+    this.assertOpen();
+    this.enforcePolicy("batch");
+    const results: (ClickResult | TypeResult | SelectResult)[] = [];
+
+    for (let i = 0; i < actions.length; i++) {
+      const action = actions[i]!;
+      switch (action.action) {
+        case "click": {
+          const result = await this.click(action.target);
+          results.push(result);
+          if (result.navigateTo || result.submitsForm) {
+            return { results, stoppedAtNavigation: i };
+          }
+          break;
+        }
+        case "type": {
+          const result = await this.type(action.target, action.text);
+          results.push(result);
+          break;
+        }
+        case "clear": {
+          const result = this.clear(action.target);
+          results.push(result);
+          break;
+        }
+        case "select": {
+          const result = this.select(action.target, ...action.values);
+          results.push(result);
+          break;
+        }
+      }
+    }
+
+    return { results };
   }
 
   // --- Forms ---
@@ -399,6 +503,30 @@ export class SievePage {
     return hashSnapshot(captureSnapshot(this._document));
   }
 
+  // --- State export/import ---
+
+  /** Export page state as a portable JSON-serializable object. */
+  exportState(): SessionState {
+    return {
+      cookies: this._cookies.all(),
+      localStorage: this._localStorage.toJSON(),
+      sessionStorage: this._sessionStorage.toJSON(),
+      url: this._history.url,
+    };
+  }
+
+  /** Import page state from a previously exported session. */
+  importState(state: SessionState): void {
+    for (const cookie of state.cookies) {
+      this._cookies.setCookieObject(cookie);
+    }
+    this._localStorage.fromJSON(state.localStorage);
+    this._sessionStorage.fromJSON(state.sessionStorage);
+    if (state.url && state.url !== "about:blank") {
+      this._history.push(state.url, this._document.title);
+    }
+  }
+
   // --- State ---
 
   get cookies(): CookieJar {
@@ -440,6 +568,16 @@ export class SievePage {
   }
 
   /**
+   * Resolve any target type to a DOM element.
+   * Supports @refs, CSS selectors, semantic locators, and direct elements.
+   */
+  private resolveAnyTarget(target: string | SieveElement | SemanticLocator): SieveElement | null {
+    if (target instanceof SieveElement) return target;
+    if (typeof target === "string") return this.resolveTarget(target);
+    return this.resolveSemanticLocator(target);
+  }
+
+  /**
    * Resolve a target string to a DOM element.
    * Supports @refs (@e1, @e2, ...) and CSS selectors.
    */
@@ -450,9 +588,42 @@ export class SievePage {
     return this.querySelector(target);
   }
 
+  /**
+   * Resolve a semantic locator to a DOM element via the a11y tree.
+   * Builds the tree if needed. Returns null if no match or ambiguous.
+   */
+  private resolveSemanticLocator(locator: SemanticLocator): SieveElement | null {
+    // Ensure a11y tree is built
+    if (!this._refMap) {
+      this.accessibilityTree();
+    }
+    const tree = buildAccessibilityTree(this._document);
+    const matches: A11yNode[] = [];
+    const walk = (node: A11yNode) => {
+      if (node.role === locator.role) {
+        if (!locator.name || node.name === locator.name) {
+          matches.push(node);
+        }
+      }
+      for (const child of node.children) walk(child);
+    };
+    walk(tree);
+
+    if (matches.length === 1 && matches[0]!.element) {
+      return matches[0]!.element;
+    }
+    return null;
+  }
+
   private assertOpen(): void {
     if (this._closed) throw new Error("Page is closed");
   }
+}
+
+function formatTarget(target: string | SieveElement | SemanticLocator): string {
+  if (typeof target === "string") return target;
+  if (target instanceof SieveElement) return `<${target.tagName}>`;
+  return `{role: "${target.role}"${target.name ? `, name: "${target.name}"` : ""}}`;
 }
 
 /** Handle for interacting with a form. */
@@ -498,8 +669,10 @@ export class AccessibilityTreeHandle {
    * Serialize to compact text for LLM consumption.
    * Options:
    *   interactive: true — only show interactive elements + landmarks
+   *   compact: true — strip structural-only wrapper nodes
    *   maxLength: 4000 — truncate output
    *   maxDepth: 5 — limit tree depth
+   *   contentBoundary: { origin: "https://..." } — wrap in nonce-protected boundary
    */
   serialize(options?: SerializeOptions): string {
     return serializeAccessibilityTree(this.root, options);
@@ -535,5 +708,13 @@ export class AccessibilityTreeHandle {
     };
     walk(this.root);
     return results;
+  }
+
+  /**
+   * Diff this tree against another, producing a unified text diff.
+   * Useful for multi-step agent loops: "what changed on the page?"
+   */
+  diff(other: AccessibilityTreeHandle, options?: SerializeOptions): string {
+    return diffAccessibilityTrees(this.root, other.root, options);
   }
 }

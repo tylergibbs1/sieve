@@ -56,7 +56,7 @@ exports[`Accessibility tree snapshots complex nested structure 1`] = `
         Article Title
       First paragraph
       [group] (collapsed)
-        [button]
+        [button] Show more
           Show more
         Hidden content
     [complementary]

@@ -41,8 +41,8 @@ const SKIP_TAGS = new Set([
   "head", "script", "style", "template", "noscript", "meta", "link", "base",
 ]);
 
-/** Compute the accessible name for an element. */
-function computeName(el: SieveElement): string {
+/** Compute the accessible name for an element, given its resolved role. */
+function computeName(el: SieveElement, role: string | null = null): string {
   // aria-label takes precedence
   const ariaLabel = el.getAttribute("aria-label");
   if (ariaLabel) return ariaLabel;
@@ -105,6 +105,12 @@ function computeName(el: SieveElement): string {
     return el.textContent.trim();
   }
 
+  // Cursor-interactive elements (div[onclick], div[tabindex], etc.)
+  // that got a role via heuristics — use textContent like real buttons
+  if (role === "button" || role === "textbox") {
+    return el.textContent.trim();
+  }
+
   // For landmark roles, try aria-label
   return el.getAttribute("aria-label") ?? "";
 }
@@ -160,7 +166,7 @@ function buildNode(el: SieveElement, doc: SieveDocument | null): A11yNode | null
 
   const node: A11yNode = {
     role: role ?? "generic",
-    name: computeName(el),
+    name: computeName(el, role),
     children,
     element: el,
   };

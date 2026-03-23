@@ -125,11 +125,36 @@ export function getImplicitRole(el: SieveElement): string | null {
   }
 }
 
-/** Get the effective ARIA role (explicit > implicit). */
+/**
+ * Detect cursor-interactive elements that lack semantic roles.
+ * These are divs/spans with onclick, tabindex, or contenteditable
+ * that would be invisible to the a11y tree without this heuristic.
+ */
+function getCursorInteractiveRole(el: SieveElement): string | null {
+  // onclick or event handler attributes → button
+  if (el.hasAttribute("onclick") || el.hasAttribute("onmousedown") || el.hasAttribute("onmouseup")) {
+    return "button";
+  }
+  // tabindex makes it focusable — if it has a non-negative tabindex, it's interactive
+  const tabindex = el.getAttribute("tabindex");
+  if (tabindex !== null && tabindex !== "-1") {
+    return "button";
+  }
+  // contenteditable → textbox
+  const editable = el.getAttribute("contenteditable");
+  if (editable === "" || editable === "true") {
+    return "textbox";
+  }
+  return null;
+}
+
+/** Get the effective ARIA role (explicit > implicit > cursor-interactive). */
 export function getRole(el: SieveElement): string | null {
   const explicit = el.getAttribute("role");
   if (explicit) return explicit.split(/\s+/)[0]?.toLowerCase() ?? null;
-  return getImplicitRole(el);
+  const implicit = getImplicitRole(el);
+  if (implicit) return implicit;
+  return getCursorInteractiveRole(el);
 }
 
 /** Get the heading level for heading elements. */

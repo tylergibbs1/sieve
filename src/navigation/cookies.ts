@@ -107,6 +107,30 @@ export class CookieJar {
       .join("; ");
   }
 
+  /** Get all cookies in the jar. */
+  all(): Cookie[] {
+    return [...this.cookies];
+  }
+
+  /** Add a cookie object directly (for state import). */
+  setCookieObject(cookie: Cookie): void {
+    // Remove existing cookie with same name/domain/path
+    this.cookies = this.cookies.filter(
+      (c) => !(c.name === cookie.name && c.domain === cookie.domain && c.path === cookie.path),
+    );
+
+    // Rehydrate expires if it was serialized as a string
+    const rehydrated = { ...cookie };
+    if (rehydrated.expires && typeof rehydrated.expires === "string") {
+      rehydrated.expires = new Date(rehydrated.expires);
+    }
+
+    // Don't add expired cookies
+    if (rehydrated.expires && rehydrated.expires.getTime() < Date.now()) return;
+
+    this.cookies.push(rehydrated);
+  }
+
   /** Clear all cookies. */
   clear(): void {
     this.cookies = [];

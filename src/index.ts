@@ -5,7 +5,16 @@
 
 // Core API
 export { SieveBrowser, type BrowserOptions, type NetworkConfig } from "./browser.ts";
-export { SievePage, FormHandle, AccessibilityTreeHandle, type PageOptions } from "./page.ts";
+export {
+  SievePage,
+  FormHandle,
+  AccessibilityTreeHandle,
+  type PageOptions,
+  type SemanticLocator,
+  type BatchAction,
+  type BatchResult,
+  type SessionState,
+} from "./page.ts";
 
 // DOM
 export { SieveDocument, SieveDocumentType } from "./dom/document.ts";
@@ -36,6 +45,8 @@ export { buildAccessibilityTree, type A11yNode } from "./a11y/tree.ts";
 export { serializeAccessibilityTree, type SerializeOptions } from "./a11y/serialize.ts";
 export { getRole, getImplicitRole, getHeadingLevel } from "./a11y/roles.ts";
 export { assignRefs, resolveRef, isLandmark, isSignificant, type RefMap } from "./a11y/refs.ts";
+export { diffAccessibilityTrees } from "./a11y/diff.ts";
+export { generateNonce } from "./a11y/nonce.ts";
 
 // Snapshots
 export {
@@ -69,6 +80,14 @@ export {
 export { simulateClick, type ClickResult } from "./actions/click.ts";
 export { simulateType, simulateClear, type TypeResult } from "./actions/type.ts";
 export { simulateSelect, simulateSelectByText, type SelectResult } from "./actions/select.ts";
+export {
+  checkPolicy,
+  PolicyDeniedError,
+  DEFAULT_POLICY,
+  type ActionPolicy,
+  type ActionType,
+  type PolicyCheckResult,
+} from "./actions/policy.ts";
 export { getScrollPosition, setScrollPosition, scrollBy } from "./actions/scroll.ts";
 export {
   waitForSelector,
@@ -90,6 +109,7 @@ export { SieveStorage } from "./navigation/session.ts";
 
 // Network
 export type { Fetcher, FetchResponse, FetchOptions } from "./network/fetcher.ts";
+export { DomainPolicy, DomainBlockedError, type DomainPolicyOptions } from "./network/domain-policy.ts";
 export { LiveFetcher } from "./network/live.ts";
 export { MockFetcher, ReplayFetcher } from "./network/mock.ts";
 export { DiskReplayFetcher, RecordingFetcher } from "./network/replay.ts";

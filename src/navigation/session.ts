@@ -35,12 +35,19 @@ export class SieveStorage {
     return Object.fromEntries(this.store);
   }
 
-  /** Restore from a snapshot. */
+  /** Restore from a snapshot (static — creates new instance). */
   static fromJSON(data: Record<string, string>): SieveStorage {
     const storage = new SieveStorage();
     for (const [k, v] of Object.entries(data)) {
       storage.store.set(k, v);
     }
     return storage;
+  }
+
+  /** Import data into this storage instance (merges, replacing existing keys). */
+  fromJSON(data: Record<string, string>): void {
+    for (const [k, v] of Object.entries(data)) {
+      this.store.set(k, v);
+    }
   }
 }

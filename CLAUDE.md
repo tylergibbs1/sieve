@@ -1,6 +1,6 @@
 # sieve
 
-A virtual browser for AI agents. No rendering. No Chromium. Just the parts that matter.
+The browser for AI agents. Virtual mode for speed, real browser mode (Chrome/Lightpanda via CDP) when you need it.
 
 ## Quick reference
 
@@ -16,15 +16,23 @@ A virtual browser for AI agents. No rendering. No Chromium. Just the parts that 
 src/
 ├── dom/          # Virtual DOM: nodes, parser (htmlparser2), serializer, HTMLRewriter preprocessing
 ├── css/          # CSS selector matching, computed styles (visibility/display)
-├── a11y/         # Accessibility tree builder and LLM-optimized serializer
+├── a11y/         # Accessibility tree builder, LLM-optimized serializer, structured extraction
 ├── forms/        # Form state machine, validation, serialization
 ├── actions/      # Click, type, select simulation
+├── cdp/          # Real browser via Chrome DevTools Protocol
+│   ├── browser.ts    # CdpBrowser — launch/connect Chrome or Lightpanda
+│   ├── page.ts       # CdpPage — full CDP page (screenshot, PDF, keyboard, HAR, etc.)
+│   ├── session.ts    # WebSocket CDP client
+│   ├── chrome.ts     # Chrome process launcher
+│   ├── lightpanda.ts # Lightpanda process launcher
+│   ├── tree.ts       # Chrome AX tree → sieve A11yNode conversion
+│   └── protocol.ts   # CDP message types
 ├── navigation/   # URL routing, cookie jar, storage
 ├── snapshot/     # State capture, diff, restore, Bun.hash change detection
 ├── network/      # Pluggable fetchers: live HTTP, mock, disk replay (Bun.file/Bun.write)
 ├── persistence/  # SQLite persistence (bun:sqlite) for cookies, storage, snapshots
-├── page.ts       # SievePage — main page abstraction
-├── browser.ts    # SieveBrowser — multi-page manager
+├── page.ts       # SievePage — virtual page abstraction
+├── browser.ts    # SieveBrowser — virtual multi-page manager
 └── index.ts      # Public API surface
 ```
 
@@ -39,10 +47,13 @@ src/
 
 ## Key design decisions
 
-- Pages are data structures (serializable TypeScript objects), not browser processes
+- Two modes: virtual (SieveBrowser/SievePage) for speed, CDP (CdpBrowser/CdpPage) for full browser
+- Both modes share the same accessibility tree format (A11yNode), @ref addressing, and structured extraction
+- Virtual pages are data structures (serializable TypeScript objects), not browser processes
 - Accessibility tree is the primary agent interface
 - Form state is tracked in WeakMaps separate from DOM attributes (value attr = default, WeakMap = current)
 - CSS engine is minimal: visibility/display only, no layout
 - htmlparser2 handles tokenization; our DOM is a thin layer on top
-- All interactions are synchronous except network operations and HTMLRewriter preprocessing
+- CDP mode uses direct WebSocket to Chrome/Lightpanda — no Puppeteer/Playwright dependency
+- All virtual interactions are synchronous except network operations and HTMLRewriter preprocessing
 - Two parse paths: `parseHTML()` (sync, no preprocessing) and `parseHTMLAsync()` (with HTMLRewriter)

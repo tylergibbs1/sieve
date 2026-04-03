@@ -47,6 +47,20 @@ export { getRole, getImplicitRole, getHeadingLevel } from "./a11y/roles.ts";
 export { assignRefs, resolveRef, isLandmark, isSignificant, type RefMap } from "./a11y/refs.ts";
 export { diffAccessibilityTrees } from "./a11y/diff.ts";
 export { generateNonce } from "./a11y/nonce.ts";
+export {
+  extractTables,
+  extractLists,
+  extractLinks,
+  extractForms,
+  extractHeadings,
+  extractStructured,
+  type ExtractedTable,
+  type ExtractedList,
+  type ExtractedLink,
+  type ExtractedForm,
+  type ExtractedFormField,
+  type ExtractedData,
+} from "./a11y/extract.ts";
 
 // Snapshots
 export {
@@ -157,3 +171,22 @@ export {
   type SieveEvent,
   type EventHandler,
 } from "./limits.ts";
+
+// CDP (real browser via Chrome DevTools Protocol)
+export { CdpBrowser, type CdpBrowserOptions } from "./cdp/browser.ts";
+export { type LightpandaLaunchOptions } from "./cdp/lightpanda.ts";
+export {
+  CdpPage,
+  CdpAccessibilityTreeHandle,
+  type CdpElementHandle,
+  type SemanticLocator as CdpSemanticLocator,
+  type ConsoleMessage,
+  type PageException,
+  type DialogPolicy,
+  type RouteHandler,
+  type RouteContext,
+  type HarEntry,
+  type ActionRecord,
+} from "./cdp/page.ts";
+export { type CdpRefMap } from "./cdp/tree.ts";
+export { type ChromeLaunchOptions } from "./cdp/protocol.ts";

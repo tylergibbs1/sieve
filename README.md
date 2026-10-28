@@ -6,45 +6,15 @@
 
 <p align="center"><strong>The browser for AI agents. Virtual mode for speed, real browser mode when you need it.</strong></p>
 
-TypeScript. Bun. In-memory virtual DOM or real Chrome/Lightpanda via CDP.
+sieve gives AI agents a structured, clickable view of web pages without launching a browser process, and drives real Chrome or Lightpanda over CDP with the same API when a page needs it. TypeScript on Bun.
 
-## The Problem
+## Quick start
 
-Every AI agent that touches the web spins up a real browser. Puppeteer launches Chromium. Playwright launches Chromium. Even headless browsers optimized for speed are still doing real work: parsing HTML, executing JavaScript, maintaining a live DOM, handling network requests.
-
-For most agent workflows, this is massive overkill. An agent filling out a form doesn't need pixel rendering. An agent extracting prices doesn't need a compositing engine. An agent navigating a checkout flow doesn't need WebGL support.
-
-What agents actually need:
-- A structured representation of page state they can reason about
-- The ability to "click" things and see what changes
-- Form state management
-- Navigation and routing
-- Cookie and session handling
-- An accessibility tree (this is what most agents already extract from real browsers anyway)
-
-sieve gives agents all of this without ever launching a browser process. And when you *do* need a real browser — SPAs, JS-heavy pages, screenshots — sieve's CDP mode controls Chrome or Lightpanda with the same agent-friendly API.
-
-## Performance
-
-| Metric | Chrome Headless | sieve (virtual) | sieve (CDP) |
-|---|---|---|---|
-| Startup time | ~500ms | **<0.001ms** | ~500ms |
-| Memory per page | ~50-200MB | **~13KB** | ~50-200MB |
-| Parse + build a11y tree | ~200ms | **<1ms** | ~20ms |
-| Concurrent pages (8GB RAM) | ~40-80 | **500,000+** | ~40-80 |
-| Snapshot + restore | N/A | **<0.05ms** | N/A |
-| Screenshots / PDF | Yes | No | **Yes** |
-| Full JS execution | Yes | QuickJS sandbox | **Yes** |
-
-## Install
+sieve isn't published to npm (the `sieve` package there is unrelated). Install it from GitHub; it requires the [Bun](https://bun.sh) runtime.
 
 ```bash
-bun add sieve
+bun add github:tylergibbs1/sieve
 ```
-
-> Requires [Bun](https://bun.sh) runtime.
-
-## Quick Start
 
 ```typescript
 import { SieveBrowser } from "sieve";
@@ -68,9 +38,59 @@ console.log(tree.serialize());
 browser.close();
 ```
 
-## Core Concepts
+More runnable scripts live in [`examples/`](examples).
 
-### Pages Are Data, Not Pixels
+## Why sieve
+
+Every AI agent that touches the web spins up a real browser. Puppeteer launches Chromium. Playwright launches Chromium. Even headless browsers optimized for speed are still doing real work: parsing HTML, executing JavaScript, maintaining a live DOM, handling network requests.
+
+For most agent workflows, this is massive overkill. An agent filling out a form doesn't need pixel rendering. An agent extracting prices doesn't need a compositing engine. An agent navigating a checkout flow doesn't need WebGL support.
+
+What agents actually need:
+- A structured representation of page state they can reason about
+- The ability to "click" things and see what changes
+- Form state management
+- Navigation and routing
+- Cookie and session handling
+- An accessibility tree (this is what most agents already extract from real browsers anyway)
+
+sieve gives agents all of this without ever launching a browser process. And when you *do* need a real browser — SPAs, JS-heavy pages, screenshots — sieve's CDP mode controls Chrome or Lightpanda with the same agent-friendly API.
+
+### Virtual mode vs CDP mode
+
+| | Virtual Mode (`SieveBrowser`) | CDP Mode (`CdpBrowser`) |
+|---|---|---|
+| **Startup** | <0.001ms | ~500ms (Chrome), faster (Lightpanda) |
+| **Memory** | ~13KB per page | ~50-200MB (Chrome) |
+| **JavaScript** | QuickJS sandbox (basic DOM) | Full browser JS engine |
+| **SPAs** | Limited | Full support |
+| **Screenshots / PDF** | No | Yes (PNG, JPEG, PDF, annotated) |
+| **Network interception** | Mock fetcher | CDP Fetch domain (route, block, mock) |
+| **Device emulation** | No | Yes (iPhone, Pixel, iPad, custom) |
+| **HAR recording** | No | Yes (HAR 1.2 export) |
+| **Bot detection** | HTTP profiles only | Real browser fingerprint |
+| **Dependencies** | None (just Bun) | Chrome or Lightpanda binary |
+| **Structured extraction** | Yes | Yes |
+| **A11y tree / @refs** | Yes | Yes |
+| **Session recording** | No | Yes (action transcript) |
+
+Use virtual mode for speed and scale (500K+ concurrent pages). Use CDP mode when you need real JS, screenshots, or SPA support. Both modes share the same accessibility tree, @ref addressing, structured extraction, and action API.
+
+### Performance
+
+| Metric | Chrome Headless | sieve (virtual) | sieve (CDP) |
+|---|---|---|---|
+| Startup time | ~500ms | **<0.001ms** | ~500ms |
+| Memory per page | ~50-200MB | **~13KB** | ~50-200MB |
+| Parse + build a11y tree | ~200ms | **<1ms** | ~20ms |
+| Concurrent pages (8GB RAM) | ~40-80 | **500,000+** | ~40-80 |
+| Snapshot + restore | N/A | **<0.05ms** | N/A |
+| Screenshots / PDF | Yes | No | **Yes** |
+| Full JS execution | Yes | QuickJS sandbox | **Yes** |
+
+## Features
+
+### Pages are data, not pixels
 
 A sieve page is a serializable TypeScript object. No rendering pipeline. The "page" is a data structure that agents can inspect and manipulate directly.
 
@@ -87,7 +107,7 @@ await page.click('button[type="submit"]');
 console.log(page.forms[0].data); // { email: "user@example.com" }
 ```
 
-### The Accessibility Tree Is First-Class
+### The accessibility tree is first-class
 
 Most browser agents already convert the DOM to an accessibility tree before feeding it to an LLM. sieve makes this the primary interface — always available, always up-to-date, token-efficient.
 
@@ -105,7 +125,7 @@ console.log(tree.serialize());
 //       [button] Create Account
 ```
 
-### Snapshots and Diffing
+### Snapshots and diffing
 
 Capture, compare, and restore page state instantly:
 
@@ -125,7 +145,26 @@ const changes = SievePage.diff(before, after);
 page.restore(before);
 ```
 
-## Network Modes
+### @ref element addressing
+
+Interactive elements get stable `@e1`, `@e2` refs from the accessibility tree. Agents use refs instead of fragile CSS selectors:
+
+```typescript
+const tree = page.accessibilityTree();
+console.log(tree.serialize({ interactive: true }));
+// [form] Registration
+//   [textbox] @e1 Email (required)
+//   [textbox] @e2 Password (required)
+//   [checkbox] @e3 (unchecked)
+//   [button] @e4 Submit
+
+await page.type("@e1", "alice@example.com");
+await page.type("@e2", "secret123");
+await page.click("@e3");  // check the checkbox
+await page.click("@e4");  // submit
+```
+
+### Network modes
 
 ```typescript
 // Live HTTP
@@ -151,7 +190,7 @@ const browser = new SieveBrowser({
 });
 ```
 
-## HTML Preprocessing
+### HTML preprocessing
 
 Strip scripts, styles, and noise before parsing using Bun's native HTMLRewriter:
 
@@ -174,7 +213,7 @@ const doc = await parseHTMLAsync(html, {
 });
 ```
 
-## JavaScript Execution (Layer 2)
+### JavaScript execution (Layer 2)
 
 Execute page scripts in a sandboxed QuickJS WASM environment with DOM bindings:
 
@@ -192,7 +231,7 @@ await page.executeScripts();
 
 The sandbox has `document.querySelector`, `createElement`, `textContent`, `classList`, `style`, `innerHTML` — but no `fetch`, no `eval`, no network access.
 
-## Real Browser Mode (CDP)
+### Real browser mode (CDP)
 
 When you need full JavaScript execution, SPA support, or screenshots, sieve can control a real browser via the Chrome DevTools Protocol. Same agent-friendly API — accessibility tree, @refs, click/type/select — backed by a real rendering engine.
 
@@ -271,26 +310,24 @@ await page.upload("#file-input", "/path/to/file.pdf");
 await browser.close();
 ```
 
-## @Ref Element Addressing
+### Structured data extraction
 
-Interactive elements get stable `@e1`, `@e2` refs from the accessibility tree. Agents use refs instead of fragile CSS selectors:
+Extract tables, lists, forms, links, and headings as typed JSON from any accessibility tree (works in both virtual and CDP mode):
 
 ```typescript
-const tree = page.accessibilityTree();
-console.log(tree.serialize({ interactive: true }));
-// [form] Registration
-//   [textbox] @e1 Email (required)
-//   [textbox] @e2 Password (required)
-//   [checkbox] @e3 (unchecked)
-//   [button] @e4 Submit
+import { extractStructured } from "sieve";
 
-await page.type("@e1", "alice@example.com");
-await page.type("@e2", "secret123");
-await page.click("@e3");  // check the checkbox
-await page.click("@e4");  // submit
+const tree = page.accessibilityTree(); // or await cdpPage.accessibilityTree()
+const data = extractStructured(tree.root);
+
+data.tables;   // [{ name, headers: ["Name", "Age"], rows: [["Alice", "30"], ...] }]
+data.links;    // [{ text: "Sign In", ref: "@e5" }]
+data.forms;    // [{ name: "Login", fields: [{ role: "textbox", name: "Email", required: true, ref: "@e3" }] }]
+data.headings; // [{ level: 1, text: "Welcome" }, { level: 2, text: "Features" }]
+data.lists;    // [{ name: "", items: ["Item 1", "Item 2", "Item 3"] }]
 ```
 
-## Browser Profiles & WAF Solving
+### Browser profiles and WAF solving
 
 Realistic HTTP headers and automatic WAF challenge solving:
 
@@ -302,7 +339,7 @@ const browser = new SieveBrowser({
 });
 ```
 
-## Persistence
+### Persistence
 
 SQLite-backed storage for cookies, localStorage, and snapshots:
 
@@ -321,7 +358,24 @@ browser.persistence.saveCookies(page.cookies, "https://example.com");
 browser.persistence.saveStorage("https://example.com", "local", page.localStorage);
 ```
 
-## API Reference
+### AI SDK tool and Puppeteer compatibility
+
+`createBrowserTool` wraps sieve as a single `browser` tool for the Vercel AI SDK (navigate, click, type, select, read, extract, back, forms) that returns accessibility tree snapshots. `asPuppeteer(browser)` wraps a `SieveBrowser` in a Puppeteer-style API.
+
+```typescript
+import { createBrowserTool } from "sieve";
+import { generateText } from "ai";
+
+const browserTool = createBrowserTool({ network: "live" });
+
+const result = await generateText({
+  model: anthropic("claude-sonnet-4-20250514"),
+  tools: { browser: browserTool },
+  prompt: "Go to example.com and find the pricing page.",
+});
+```
+
+## API reference
 
 ### SieveBrowser
 
@@ -389,23 +443,6 @@ page.history;        // NavigationHistory
 page.close();
 ```
 
-## Structured Data Extraction
-
-Extract tables, lists, forms, links, and headings as typed JSON from any accessibility tree (works in both virtual and CDP mode):
-
-```typescript
-import { extractStructured } from "sieve";
-
-const tree = page.accessibilityTree(); // or await cdpPage.accessibilityTree()
-const data = extractStructured(tree.root);
-
-data.tables;   // [{ name, headers: ["Name", "Age"], rows: [["Alice", "30"], ...] }]
-data.links;    // [{ text: "Sign In", ref: "@e5" }]
-data.forms;    // [{ name: "Login", fields: [{ role: "textbox", name: "Email", required: true, ref: "@e3" }] }]
-data.headings; // [{ level: 1, text: "Welcome" }, { level: 2, text: "Features" }]
-data.lists;    // [{ name: "", items: ["Item 1", "Item 2", "Item 3"] }]
-```
-
 ### CdpPage
 
 ```typescript
@@ -467,34 +504,16 @@ await page.setCookie(...);
 await page.clearCookies();
 ```
 
-## Virtual Mode vs CDP Mode
-
-| | Virtual Mode (`SieveBrowser`) | CDP Mode (`CdpBrowser`) |
-|---|---|---|
-| **Startup** | <0.001ms | ~500ms (Chrome), faster (Lightpanda) |
-| **Memory** | ~13KB per page | ~50-200MB (Chrome) |
-| **JavaScript** | QuickJS sandbox (basic DOM) | Full browser JS engine |
-| **SPAs** | Limited | Full support |
-| **Screenshots / PDF** | No | Yes (PNG, JPEG, PDF, annotated) |
-| **Network interception** | Mock fetcher | CDP Fetch domain (route, block, mock) |
-| **Device emulation** | No | Yes (iPhone, Pixel, iPad, custom) |
-| **HAR recording** | No | Yes (HAR 1.2 export) |
-| **Bot detection** | HTTP profiles only | Real browser fingerprint |
-| **Dependencies** | None (just Bun) | Chrome or Lightpanda binary |
-| **Structured extraction** | Yes | Yes |
-| **A11y tree / @refs** | Yes | Yes |
-| **Session recording** | No | Yes (action transcript) |
-
-Use virtual mode for speed and scale (500K+ concurrent pages). Use CDP mode when you need real JS, screenshots, or SPA support. Both modes share the same accessibility tree, @ref addressing, structured extraction, and action API.
-
-## Tested Against Real Websites
+## Testing
 
 sieve is tested against 47 real websites including Amazon, BBC, GitHub, Wikipedia, GOV.UK, MDN, and Stack Overflow. 910+ tests covering parsing, selectors, accessibility trees, forms, cookies, snapshots, JS sandbox, CDP browser integration (Chrome + Lightpanda), network interception, structured extraction, and edge cases.
 
 ```bash
 bun test                    # 910+ tests
 bun test --timeout 120000   # includes live site tests
-bun benchmarks/core.ts      # performance benchmarks
+bun benchmarks/core.ts      # performance benchmarks (also: bun run bench)
+bun run typecheck           # tsc --noEmit
+bun run fuzz                # fuzzers in fuzz/
 ```
 
 ## Architecture
@@ -522,7 +541,7 @@ src/
 
 **Core dependencies:** `htmlparser2` for HTML tokenization, `quickjs-emscripten` for JS sandbox. CDP mode uses Chrome or Lightpanda (no npm packages required). Everything else is built on Bun primitives.
 
-## Bun Features Used
+### Bun features used
 
 - **bun:sqlite** — Cookie/storage/snapshot persistence with WAL mode
 - **Bun.hash** — Wyhash for snapshot equality, CRC32 for content IDs, SHA-256 for digests
